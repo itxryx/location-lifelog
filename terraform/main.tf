@@ -4,8 +4,8 @@ provider "aws" {
 }
 
 # Lambda IAMロールの作成
-resource "aws_iam_role" "lambda_role" {
-  name = "location_lifelog_lambda_role"
+resource "aws_iam_role" "lambda_iam_role" {
+  name = "location_lifelog_lambda_iam_role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -19,14 +19,14 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 # Lambdaの実行ロールに基本ポリシーをアタッチ
-resource "aws_iam_role_policy_attachment" "lambda_policies" {
-  role       = aws_iam_role.lambda_role.name
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
+  role       = aws_iam_role.lambda_iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 # Lambdaの実行ロールにDynamoDBの操作を許可するポリシーをアタッチ
 resource "aws_iam_role_policy_attachment" "lambda_dynamodb_full_access" {
-  role       = aws_iam_role.lambda_role.name
+  role       = aws_iam_role.lambda_iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
@@ -34,7 +34,7 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb_full_access" {
 resource "aws_lambda_function" "location_lifelog_function" {
   filename      = "../function.zip"
   function_name = "location-lifelog"
-  role          = aws_iam_role.lambda_role.arn
+  role          = aws_iam_role.lambda_iam_role.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
   timeout       = 10
