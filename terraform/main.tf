@@ -18,6 +18,24 @@ resource "aws_iam_role" "lambda_iam_role" {
   })
 }
 
+# Lambda IAMポリシーの作成（Amazon Location Serviceへのアクセスの許可）
+resource "aws_iam_policy" "lambda_location_service_policy" {
+  name = "location_lifelog_lambda_policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "geo:SearchPlaceIndexForPosition"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # Lambdaの実行ロールに基本ポリシーをアタッチ
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
   role       = aws_iam_role.lambda_iam_role.name
@@ -28,6 +46,12 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
 resource "aws_iam_role_policy_attachment" "lambda_dynamodb_full_access" {
   role       = aws_iam_role.lambda_iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+# Lambdaの実行ロールに独自ポリシーをアタッチ
+resource "aws_iam_role_policy_attachment" "lambda_location_service_policy" {
+  role       = aws_iam_role.lambda_iam_role.name
+  policy_arn = aws_iam_policy.lambda_location_service_policy.arn
 }
 
 # Lambda関数の定義
@@ -113,4 +137,29 @@ resource "aws_dynamodb_table" "location_lifelog_table" {
   ttl {
     enabled = false
   }
+}
+
+# Amazon Location ServiceのPlace Indexを作成
+resource "aws_location_place_index" "location_lifelog_place_index" {
+  index_name  = "location-lifelog-place-index"
+  data_source = "Esri"
+}
+
+# Lambdaの実行ロールにAmazon Location Serviceへのアクセス権限を付与
+resource "aws_iam_role_policy" "lambda_location_policy" {
+  name = "LambdaLocationPolicy"
+  role = aws_iam_role.lambda_iam_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "location:SearchPlaceIndexForPosition"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
