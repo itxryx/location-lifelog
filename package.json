@@ -15,5 +15,8 @@
     "@aws-sdk/client-dynamodb": "^3.687.0",
     "@aws-sdk/lib-dynamodb": "^3.687.0",
     "aws-sdk": "^2.1692.0"
+  },
+  "volta": {
+    "node": "20.18.0"
   }
 }
